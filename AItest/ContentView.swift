@@ -18,55 +18,58 @@ struct ContentView: View {
     @State private var timer: Timer? = nil
     @State private var isGameActive = false
     @State private var showTimeUp = false
-    @State private var scoreHistory: [Int] = []
+    @State private var showHistory = false
     @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
-        VStack(spacing: 24) {
-            Text("タイピングゲーム")
-                .font(.title)
-                .bold()
-            Text("Score: \(score)")
-                .font(.headline)
-            Text("Time: \(timeLeft)")
-                .font(.headline)
-                .foregroundColor(.red)
-            if showTimeUp {
-                Text("Time Up!")
-                    .foregroundColor(.blue)
-            }
-            Text(words[currentWordIndex])
-                .font(.largeTitle)
-                .padding()
-            TextField("Type here", text: $userInput, onCommit: checkInput)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .disabled(!isGameActive)
-                .focused($isTextFieldFocused)
-            if showCorrect {
-                Text("Correct!")
-                    .foregroundColor(.green)
-            }
-            Button(isGameActive ? "リセット" : "スタート") {
-                if isGameActive {
-                    resetGame()
-                } else {
-                    startGame()
+        NavigationStack {
+            VStack(spacing: 24) {
+                Text("タイピングゲーム")
+                    .font(.title)
+                    .bold()
+                Text("Score: \(score)")
+                    .font(.headline)
+                Text("Time: \(timeLeft)")
+                    .font(.headline)
+                    .foregroundColor(.red)
+                if showTimeUp {
+                    Text("Time Up!")
+                        .foregroundColor(.blue)
                 }
+                Text(words[currentWordIndex])
+                    .font(.largeTitle)
+                    .padding()
+                TextField("", text: $userInput, onCommit: checkInput)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .disabled(!isGameActive)
+                    .focused($isTextFieldFocused)
+                if showCorrect {
+                    Text("Correct!")
+                        .foregroundColor(.green)
+                }
+                Button(isGameActive ? "リセット" : "スタート") {
+                    if isGameActive {
+                        resetGame()
+                    } else {
+                        startGame()
+                    }
+                }
+                .padding()
+                Button("履歴を見る") {
+                    showHistory = true
+                }
+                .padding()
             }
             .padding()
-            Divider()
-            Text("履歴（上位5件）")
-                .font(.headline)
-            ForEach(scoreHistory, id: \ .self) { s in
-                Text("Score: \(s)")
+            .onAppear {
+                loadHistory()
             }
-        }
-        .padding()
-        .onAppear {
-            loadHistory()
+            .navigationDestination(isPresented: $showHistory) {
+                HistoryView()
+            }
         }
     }
     
@@ -99,7 +102,7 @@ struct ContentView: View {
         isGameActive = false
         showTimeUp = false
         score = 0
-        timeLeft = 10
+        timeLeft = 30
         userInput = ""
         currentWordIndex = 0
     }
@@ -133,12 +136,10 @@ struct ContentView: View {
         history.append(newScore)
         history = Array(history.sorted(by: >).prefix(5))
         UserDefaults.standard.set(history, forKey: "scoreHistory")
-        scoreHistory = history
     }
     
     func loadHistory() {
         let history = UserDefaults.standard.array(forKey: "scoreHistory") as? [Int] ?? []
-        scoreHistory = history
     }
 }
 
