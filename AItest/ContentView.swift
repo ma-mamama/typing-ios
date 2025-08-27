@@ -14,6 +14,12 @@ struct ContentView: View {
     @State private var userInput = ""
     @State private var score = 0
     @State private var showCorrect = false
+    @State private var timeLeft = 30
+    @State private var timer: Timer? = nil
+    @State private var isGameActive = false
+    @State private var showTimeUp = false
+    @State private var scoreHistory: [Int] = []
+    @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
         VStack(spacing: 24) {
@@ -22,6 +28,13 @@ struct ContentView: View {
                 .bold()
             Text("Score: \(score)")
                 .font(.headline)
+            Text("Time: \(timeLeft)")
+                .font(.headline)
+                .foregroundColor(.red)
+            if showTimeUp {
+                Text("Time Up!")
+                    .foregroundColor(.blue)
+            }
             Text(words[currentWordIndex])
                 .font(.largeTitle)
                 .padding()
@@ -30,30 +43,102 @@ struct ContentView: View {
                 .padding()
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+                .disabled(!isGameActive)
+                .focused($isTextFieldFocused)
             if showCorrect {
                 Text("Correct!")
                     .foregroundColor(.green)
             }
+            Button(isGameActive ? "リセット" : "スタート") {
+                if isGameActive {
+                    resetGame()
+                } else {
+                    startGame()
+                }
+            }
+            .padding()
+            Divider()
+            Text("履歴（上位5件）")
+                .font(.headline)
+            ForEach(scoreHistory, id: \ .self) { s in
+                Text("Score: \(s)")
+            }
         }
         .padding()
+        .onAppear {
+            loadHistory()
+        }
+    }
+    
+    func startGame() {
+        score = 0
+        currentWordIndex = 0
+        timeLeft = 30
+        isGameActive = true
+        showTimeUp = false
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            if timeLeft > 0 {
+                timeLeft -= 1
+                if timeLeft == 0 {
+                    timeUp()
+                }
+            }
+        }
+    }
+    
+    func timeUp() {
+        isGameActive = false
+        showTimeUp = true
+        timer?.invalidate()
+        saveScore(score)
+    }
+    
+    func resetGame() {
+        timer?.invalidate()
+        isGameActive = false
+        showTimeUp = false
+        score = 0
+        timeLeft = 10
+        userInput = ""
+        currentWordIndex = 0
     }
     
     func checkInput() {
+        guard isGameActive else { return }
         if userInput == words[currentWordIndex] {
             score += 1
             showCorrect = true
+            userInput = ""
+            isTextFieldFocused = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                isTextFieldFocused = true
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 showCorrect = false
                 nextWord()
             }
         } else {
             showCorrect = false
+            userInput = ""
         }
-        userInput = ""
     }
     
     func nextWord() {
         currentWordIndex = (currentWordIndex + 1) % words.count
+    }
+    
+    func saveScore(_ newScore: Int) {
+        var history = UserDefaults.standard.array(forKey: "scoreHistory") as? [Int] ?? []
+        history.append(newScore)
+        history = Array(history.sorted(by: >).prefix(5))
+        UserDefaults.standard.set(history, forKey: "scoreHistory")
+        scoreHistory = history
+    }
+    
+    func loadHistory() {
+        let history = UserDefaults.standard.array(forKey: "scoreHistory") as? [Int] ?? []
+        scoreHistory = history
     }
 }
 
