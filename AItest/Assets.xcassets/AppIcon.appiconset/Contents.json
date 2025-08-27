@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "タイピングアイコン.png",
+      "filename" : "タイピングアイコン 3.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "タイピングアイコン 1.png",
+      "filename" : "タイピングアイコン 4.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,7 +25,7 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "タイピングアイコン 2.png",
+      "filename" : "タイピングアイコン 5.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
