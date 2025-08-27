@@ -9,9 +9,21 @@ import SwiftUI
 
 @main
 struct AItestApp: App {
+    @State private var showSplash = true
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ZStack {
+                if showSplash {
+                    SplashView()
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                showSplash = false
+                            }
+                        }
+                } else {
+                    ContentView()
+                }
+            }
         }
     }
 }
